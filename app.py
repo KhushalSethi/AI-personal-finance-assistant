@@ -17,7 +17,7 @@ from finance.analytics import (
 )
 from finance.anomaly_detection import detect_anomalies
 from finance.categorization import CATEGORIES, categorize_transactions
-from finance.chatbot import answer_question, generate_financial_insights
+from finance.chatbot import TOP_QUESTIONS, answer_question, generate_financial_insights
 from finance.forecasting import forecast_next_month_expenses
 from finance.preprocessing import CSVProcessingError, read_csv_safely
 from finance.utils import configure_logging, currency, dataframe_to_csv_bytes, load_transactions, save_transactions
@@ -223,6 +223,11 @@ def show_ai_tab(df: pd.DataFrame, use_openai: bool) -> None:
         st.write(f"- {recommendation}")
 
     st.subheader("Ask Your Finance Assistant")
+    st.caption("Top questions")
+    for top_question in TOP_QUESTIONS:
+        with st.expander(top_question):
+            st.write(answer_question(df, top_question))
+
     question = st.text_input("Ask a question", placeholder="Where did I spend the most?")
     if question:
         st.write(answer_question(df, question))
