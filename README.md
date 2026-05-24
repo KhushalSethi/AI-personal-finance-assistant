@@ -104,10 +104,6 @@ pytest
 
 The tests cover CSV preprocessing, categorization, analytics calculations, and anomaly detection.
 
-## Screenshots
-
-Add screenshots here after running the app locally.
-
 ## Notes
 
 - SQLite data is stored at `data/finance.db` when you click **Save current transactions to SQLite**.
