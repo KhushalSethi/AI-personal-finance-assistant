@@ -84,6 +84,18 @@ Solution:
 - Added top suggested questions in the UI with expandable answers.
 - Kept OpenAI optional only for richer summaries.
 
+## Keeping Generated Answers Readable
+
+Generated answers can become hard to read when they include retrieval traces, source chunks, page references, or raw evidence text. That kind of debug output is useful during development, but it hurts the user experience.
+
+Solution:
+
+- Changed local summaries to structured Markdown sections.
+- Rendered summaries and chatbot answers with Markdown in Streamlit.
+- Tightened the OpenAI prompt so it asks for only final user-facing content.
+- Added a cleanup layer that strips `Relevant evidence`, `Sources`, page markers, and chunk IDs before text is displayed.
+- Added tests so retrieval/debug text does not leak back into generated answers.
+
 ## Keeping the Project Testable
 
 Finance apps can silently produce wrong answers if calculations are not tested.
