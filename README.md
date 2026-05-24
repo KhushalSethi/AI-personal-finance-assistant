@@ -9,6 +9,8 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
 ```text
 .
 ├── app.py
+├── CHALLENGES.md
+├── DOCUMENTATION.md
 ├── data/
 │   └── sample_transactions.csv
 ├── finance/
@@ -36,9 +38,9 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
 
 - CSV bank statement upload with flexible column names.
 - Robust preprocessing for missing values, malformed rows, multiple date formats, debit/credit columns, and currency-formatted amounts.
-- Automatic rule-based transaction categorization with manual correction in the UI.
+- Hybrid transaction categorization using rules plus learned TF-IDF/logistic-regression predictions from existing labeled data.
 - Dashboard for monthly spending, category breakdown, income vs expenses, savings rate, top merchants, and recurring payments.
-- Anomaly detection with scikit-learn `IsolationForest` and a small-data fallback.
+- Personalized anomaly detection that combines `IsolationForest` with user-specific merchant frequency, category deviation, merchant deviation, and late-night transaction signals.
 - Next-month expense forecasting with linear regression and average fallback.
 - ML Insights tab with KMeans monthly spending-pattern clustering.
 - Forecast model comparison across average, moving average, linear regression, and random forest models.
@@ -108,6 +110,10 @@ pytest
 ```
 
 The tests cover CSV preprocessing, categorization, analytics calculations, anomaly detection, chatbot routing, and ML insight helpers.
+
+## Project Challenges
+
+See [CHALLENGES.md](CHALLENGES.md) for the main implementation challenges and how they were handled.
 
 ## Notes
 

@@ -118,7 +118,18 @@ def show_transaction_editor(df: pd.DataFrame) -> pd.DataFrame:
             "category": st.column_config.SelectboxColumn("Category", options=CATEGORIES, required=True),
             "amount": st.column_config.NumberColumn("Amount", format="%.2f"),
         },
-        disabled=["date", "description", "amount", "merchant", "transaction_type", "month", "year", "day"],
+        disabled=[
+            "date",
+            "description",
+            "amount",
+            "merchant",
+            "transaction_type",
+            "month",
+            "year",
+            "day",
+            "category_source",
+            "category_confidence",
+        ],
     )
     edited["date"] = pd.to_datetime(edited["date"])
     st.download_button(

@@ -10,10 +10,10 @@ The app can:
 
 - Upload CSV bank statements.
 - Clean and normalize transaction data.
-- Categorize transactions automatically.
+- Categorize transactions automatically with rules and learned category predictions.
 - Allow manual category correction from the UI.
 - Show spending dashboards.
-- Detect unusual transactions.
+- Detect unusual transactions using both model-based and personalized behavior signals.
 - Forecast next month expenses.
 - Compare forecast models on historical monthly expenses.
 - Cluster monthly spending patterns with unsupervised learning.
@@ -34,7 +34,7 @@ The application is designed to work even without an OpenAI API key. If OpenAI is
 - Streamlit for the web UI.
 - pandas for CSV loading, cleaning, and analytics.
 - plotly for dashboard charts.
-- scikit-learn for anomaly detection, forecasting, forecast evaluation, and clustering.
+- scikit-learn for anomaly detection, learned categorization, forecasting, forecast evaluation, and clustering.
 - SQLite for local lightweight persistence.
 - OpenAI Python SDK for optional AI summaries.
 - pytest for automated testing.
@@ -46,6 +46,7 @@ Note: The project was verified locally with the available Python environment, bu
 ```text
 .
 ├── app.py
+├── CHALLENGES.md
 ├── DOCUMENTATION.md
 ├── README.md
 ├── requirements.txt
@@ -172,7 +173,7 @@ Error handling:
 
 ### `finance/categorization.py`
 
-Categorizes transactions using keyword rules.
+Categorizes transactions using keyword rules and lightweight learned predictions.
 
 Main functions:
 
@@ -202,6 +203,15 @@ Example keyword behavior:
 - `pharmacy`, `hospital`, `doctor` -> Healthcare
 - `salary`, `payroll`, `wages` -> Salary
 - `SIP`, `mutual fund`, `stock`, `broker` -> Investments
+
+Learned categorization behavior:
+
+- Existing labeled categories are treated as user training examples when present.
+- Confident rule-based labels seed the model when no manual labels exist.
+- Transaction descriptions are converted into TF-IDF text features.
+- Logistic regression predicts categories for transactions that rules would otherwise mark as `Other`.
+- Learned labels are applied only above a confidence threshold.
+- The app keeps `category_source` and `category_confidence` columns so users can see whether a label came from rules, existing labels, or learned prediction.
 
 ### `finance/analytics.py`
 
@@ -251,6 +261,7 @@ Main function:
 Behavior:
 
 - For larger datasets, it uses scikit-learn `IsolationForest`.
+- Adds personalized behavior signals before model scoring.
 - For very small datasets, it uses a robust median-based fallback.
 
 Features used by the model:
@@ -258,11 +269,22 @@ Features used by the model:
 - Expense amount.
 - Day of month.
 - Expense compared with category average.
+- Merchant frequency.
+- Expense compared with usual category amount.
+- Expense compared with usual merchant amount.
+- Late-night timing when transaction timestamps include time information.
+
+Personalized anomaly reasons include:
+
+- Category deviation, for example spending much more than usual in `Food`.
+- Merchant deviation, for example paying much more than usual to the same merchant.
+- New merchant, where the merchant has not appeared before in the uploaded dataset.
+- Late-night transaction, when timestamp data shows activity between midnight and early morning.
 
 Returned data:
 
 - Only transactions marked as anomalous.
-- Includes `expense`, `income`, `anomaly_score`, and `is_anomaly`.
+- Includes `expense`, `income`, `anomaly_score`, `is_anomaly`, personalized feature columns, and `anomaly_reason`.
 
 ### `finance/forecasting.py`
 
@@ -545,11 +567,12 @@ Current test coverage includes:
 - CSV preprocessing.
 - Debit/credit normalization.
 - Missing amount validation.
-- Keyword categorization.
+- Keyword and learned categorization.
 - Monthly summary calculations.
 - Category breakdown calculations.
 - Financial health score bounds.
 - Small-dataset anomaly detection.
+- Personalized anomaly reasons.
 - Chatbot intent routing and row retrieval.
 - ML spending pattern clustering.
 - Forecast model evaluation.
@@ -676,10 +699,11 @@ For very large datasets, future improvements could include chunked CSV loading, 
 - OCR is not implemented.
 - Multi-user login is not implemented.
 - SQLite saves append rows and do not currently de-duplicate.
-- Categorization is keyword-based rather than trained on user corrections.
+- Learned categorization improves only when useful labeled examples exist.
 - Forecasting is intentionally lightweight, though model comparison is included.
 - ML clustering needs at least two months of expense data to produce profiles.
 - Forecast model comparison needs at least four months of data.
+- Late-night anomaly detection requires CSV timestamps with actual time information, not date-only statements.
 - Investment tracking is limited to category detection.
 - The dark mode toggle uses lightweight CSS and does not replace Streamlit's native theme system.
 

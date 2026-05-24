@@ -15,3 +15,27 @@ def test_categorize_dataframe_adds_category():
     result = categorize_transactions(df)
 
     assert result["category"].tolist() == ["Shopping", "Healthcare"]
+
+
+def test_learned_categorization_uses_existing_labeled_data():
+    df = pd.DataFrame(
+        {
+            "description": [
+                "Bluebowl lunch",
+                "Bluebowl dinner",
+                "Bluebowl meal",
+                "Citycab ride",
+                "Citycab airport",
+                "Citycab station",
+                "Bluebowl brunch",
+            ],
+            "amount": [-400, -500, -450, -700, -900, -650, -550],
+            "category": ["Food", "Food", "Food", "Travel", "Travel", "Travel", None],
+        }
+    )
+
+    result = categorize_transactions(df)
+
+    assert result.loc[6, "category"] == "Food"
+    assert result.loc[6, "category_source"] == "learned"
+    assert result.loc[6, "category_confidence"] >= 0.55

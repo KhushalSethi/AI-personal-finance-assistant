@@ -139,9 +139,10 @@ def answer_question(df: pd.DataFrame, question: str) -> str:
         if anomalies.empty:
             return "No unusual expenses were detected in the current data."
         row = anomalies.iloc[0]
+        reason = row.get("anomaly_reason", "it differs from your usual spending pattern")
         return (
             f"The largest unusual expense is {currency(float(row['expense']))} at "
-            f"{row['merchant']} on {pd.to_datetime(row['date']).date()}."
+            f"{row['merchant']} on {pd.to_datetime(row['date']).date()}. Reason: {reason}."
         )
 
     if "subscription" in q or "recurring" in q:
