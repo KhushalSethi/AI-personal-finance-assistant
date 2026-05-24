@@ -18,6 +18,7 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
 │   ├── categorization.py
 │   ├── chatbot.py
 │   ├── forecasting.py
+│   ├── ml_insights.py
 │   ├── preprocessing.py
 │   └── utils.py
 ├── requirements.txt
@@ -26,6 +27,8 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
     ├── test_analytics.py
     ├── test_anomaly_detection.py
     ├── test_categorization.py
+    ├── test_chatbot.py
+    ├── test_ml_insights.py
     └── test_preprocessing.py
 ```
 
@@ -37,11 +40,13 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
 - Dashboard for monthly spending, category breakdown, income vs expenses, savings rate, top merchants, and recurring payments.
 - Anomaly detection with scikit-learn `IsolationForest` and a small-data fallback.
 - Next-month expense forecasting with linear regression and average fallback.
+- ML Insights tab with KMeans monthly spending-pattern clustering.
+- Forecast model comparison across average, moving average, linear regression, and random forest models.
 - Financial health score.
 - Search, filter, and CSV export.
 - Optional SQLite persistence.
 - Optional OpenAI-generated summaries with deterministic local fallback.
-- Simple finance chatbot for common spending questions.
+- Local finance chatbot for category ranking, row retrieval, merchant totals, savings advice, recurring payments, forecasts, and top-question shortcuts.
 - Light/dark mode toggle.
 
 ## Setup
@@ -102,7 +107,7 @@ Date,Narration,Debit,Credit
 pytest
 ```
 
-The tests cover CSV preprocessing, categorization, analytics calculations, and anomaly detection.
+The tests cover CSV preprocessing, categorization, analytics calculations, anomaly detection, chatbot routing, and ML insight helpers.
 
 ## Notes
 

@@ -18,7 +18,8 @@ from finance.analytics import (
 from finance.anomaly_detection import detect_anomalies
 from finance.categorization import CATEGORIES, categorize_transactions
 from finance.chatbot import TOP_QUESTIONS, answer_question, generate_financial_insights
-from finance.forecasting import forecast_next_month_expenses
+from finance.forecasting import evaluate_forecast_models, forecast_next_month_expenses
+from finance.ml_insights import cluster_monthly_spending_patterns, summarize_spending_clusters
 from finance.preprocessing import CSVProcessingError, read_csv_safely
 from finance.utils import configure_logging, currency, dataframe_to_csv_bytes, load_transactions, save_transactions
 
@@ -155,8 +156,8 @@ def show_filters(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def show_dashboard(df: pd.DataFrame) -> None:
-    tab_dashboard, tab_trends, tab_anomalies, tab_recurring = st.tabs(
-        ["Dashboard", "Trends", "Anomalies", "Recurring"]
+    tab_dashboard, tab_trends, tab_ml, tab_anomalies, tab_recurring = st.tabs(
+        ["Dashboard", "Trends", "ML Insights", "Anomalies", "Recurring"]
     )
 
     with tab_dashboard:
@@ -198,6 +199,37 @@ def show_dashboard(df: pd.DataFrame) -> None:
                 use_container_width=True,
             )
             st.dataframe(monthly, use_container_width=True, hide_index=True)
+
+    with tab_ml:
+        clusters = cluster_monthly_spending_patterns(df)
+        st.subheader("Spending Pattern Clusters")
+        if clusters.empty:
+            st.info("At least two months of expense data are needed for clustering.")
+        else:
+            st.write(summarize_spending_clusters(clusters))
+            st.plotly_chart(
+                px.bar(
+                    clusters,
+                    x="month",
+                    y="total_expenses",
+                    color="profile",
+                    title="Monthly Spending Pattern Clusters",
+                ),
+                use_container_width=True,
+            )
+            st.dataframe(clusters, use_container_width=True, hide_index=True)
+
+        st.subheader("Forecast Model Evaluation")
+        forecast_scores = evaluate_forecast_models(df)
+        if forecast_scores.empty:
+            st.info("At least four months of data are needed to compare forecast models.")
+        else:
+            best = forecast_scores.iloc[0]
+            st.success(
+                f"Best historical forecast model: {best['model'].replace('_', ' ')} "
+                f"with MAE {currency(float(best['mae']))}."
+            )
+            st.dataframe(forecast_scores, use_container_width=True, hide_index=True)
 
     with tab_anomalies:
         anomalies = detect_anomalies(df)

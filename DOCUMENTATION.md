@@ -15,10 +15,13 @@ The app can:
 - Show spending dashboards.
 - Detect unusual transactions.
 - Forecast next month expenses.
+- Compare forecast models on historical monthly expenses.
+- Cluster monthly spending patterns with unsupervised learning.
 - Calculate a financial health score.
 - Detect recurring payments.
 - Generate plain-English financial summaries.
-- Answer simple finance questions through a chatbot interface.
+- Answer finance questions through a local query-style chatbot interface.
+- Show top suggested finance questions with expandable answers.
 - Export categorized transactions to CSV.
 - Optionally save transactions to SQLite.
 - Optionally use OpenAI for richer AI-generated summaries.
@@ -31,7 +34,7 @@ The application is designed to work even without an OpenAI API key. If OpenAI is
 - Streamlit for the web UI.
 - pandas for CSV loading, cleaning, and analytics.
 - plotly for dashboard charts.
-- scikit-learn for anomaly detection and forecasting.
+- scikit-learn for anomaly detection, forecasting, forecast evaluation, and clustering.
 - SQLite for local lightweight persistence.
 - OpenAI Python SDK for optional AI summaries.
 - pytest for automated testing.
@@ -55,12 +58,15 @@ Note: The project was verified locally with the available Python environment, bu
 │   ├── categorization.py
 │   ├── chatbot.py
 │   ├── forecasting.py
+│   ├── ml_insights.py
 │   ├── preprocessing.py
 │   └── utils.py
 └── tests/
     ├── test_analytics.py
     ├── test_anomaly_detection.py
     ├── test_categorization.py
+    ├── test_chatbot.py
+    ├── test_ml_insights.py
     └── test_preprocessing.py
 ```
 
@@ -106,9 +112,10 @@ Important UI sections:
 - Search and filter area.
 - Dashboard tab.
 - Trends tab.
+- ML Insights tab.
 - Anomalies tab.
 - Recurring payments tab.
-- AI insights and chatbot section.
+- AI insights, top questions, and chatbot section.
 
 ### `finance/preprocessing.py`
 
@@ -261,11 +268,12 @@ Returned data:
 
 Predicts next month expenses.
 
-Main function:
+Main functions:
 
 - `forecast_next_month_expenses(df)`
+- `evaluate_forecast_models(df, min_train_months=3)`
 
-Behavior:
+Next-month forecast behavior:
 
 - If no data exists, returns a zero forecast.
 - If fewer than 3 months exist, uses average monthly expenses.
@@ -277,6 +285,39 @@ Returned fields:
 - `forecast`
 - `method`
 
+Forecast evaluation behavior:
+
+- Uses walk-forward validation after at least 3 training months.
+- Compares average, moving average, linear regression, and random forest regressors.
+- Reports mean absolute error (`mae`), mean absolute percentage error (`mape`), and evaluated month count.
+- Sorts models by lowest error so the best historical method appears first.
+
+### `finance/ml_insights.py`
+
+Creates unsupervised ML insights from monthly spending behavior.
+
+Main functions:
+
+- `cluster_monthly_spending_patterns(df, max_clusters=3)`
+- `summarize_spending_clusters(clusters)`
+
+Behavior:
+
+- Converts transactions into monthly category expense vectors.
+- Uses category spending shares so months are compared by spending pattern, not only total size.
+- Scales features with `StandardScaler`.
+- Clusters months with scikit-learn `KMeans`.
+- Labels each month with a profile such as `Bills-heavy month`, `Travel-heavy month`, or `mixed-spending month`.
+
+Returned fields include:
+
+- `month`
+- `cluster`
+- `profile`
+- `total_expenses`
+- `dominant_category`
+- `dominant_category_share`
+
 ### `finance/chatbot.py`
 
 Generates AI-style summaries, recommendations, and chatbot answers.
@@ -287,6 +328,7 @@ Main functions:
 - `generate_local_summary(df)`
 - `generate_recommendations(df)`
 - `answer_question(df, question)`
+- `TOP_QUESTIONS`
 
 Supported chatbot examples:
 
@@ -296,6 +338,11 @@ Supported chatbot examples:
 - `What subscriptions do I have?`
 - `How much did I save?`
 - `What happened last month?`
+- `Show my top 5 expenses`
+- `Show Amazon transactions above 1000`
+- `Which merchants did I spend the most at?`
+- `Compare food spending across months`
+- `What should I do to save more?`
 
 OpenAI behavior:
 
@@ -503,6 +550,9 @@ Current test coverage includes:
 - Category breakdown calculations.
 - Financial health score bounds.
 - Small-dataset anomaly detection.
+- Chatbot intent routing and row retrieval.
+- ML spending pattern clustering.
+- Forecast model evaluation.
 
 ## 11. Manual Workflow Test
 
@@ -516,13 +566,18 @@ Use this checklist after making changes:
 6. Filter by one category.
 7. Confirm dashboard metrics update.
 8. Open the Trends tab.
-9. Open the Anomalies tab.
-10. Open the Recurring tab.
-11. Ask: `Where did I spend the most?`
-12. Ask: `What unusual expenses occurred?`
-13. Export the categorized CSV.
-14. Click the SQLite save button.
-15. Toggle `Load saved transactions` and confirm saved transactions load.
+9. Open the ML Insights tab.
+10. Confirm spending clusters or the minimum-data message appears.
+11. Confirm forecast model comparison or the minimum-data message appears.
+12. Open the Anomalies tab.
+13. Open the Recurring tab.
+14. Expand a top question in the chatbot section.
+15. Ask: `Where did I spend the most?`
+16. Ask: `Show my top 5 expenses`
+17. Ask: `What unusual expenses occurred?`
+18. Export the categorized CSV.
+19. Click the SQLite save button.
+20. Toggle `Load saved transactions` and confirm saved transactions load.
 
 ## 12. SQLite Persistence
 
@@ -622,7 +677,9 @@ For very large datasets, future improvements could include chunked CSV loading, 
 - Multi-user login is not implemented.
 - SQLite saves append rows and do not currently de-duplicate.
 - Categorization is keyword-based rather than trained on user corrections.
-- Forecasting is intentionally simple.
+- Forecasting is intentionally lightweight, though model comparison is included.
+- ML clustering needs at least two months of expense data to produce profiles.
+- Forecast model comparison needs at least four months of data.
 - Investment tracking is limited to category detection.
 - The dark mode toggle uses lightweight CSS and does not replace Streamlit's native theme system.
 
@@ -826,4 +883,3 @@ The Streamlit app was also smoke-checked through a local HTTP request and return
 ```text
 HTTP/1.1 200 OK
 ```
-
