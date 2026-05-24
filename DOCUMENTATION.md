@@ -19,14 +19,14 @@ The app can:
 - Cluster monthly spending patterns with unsupervised learning.
 - Calculate a financial health score.
 - Detect recurring payments.
-- Generate readable Markdown financial summaries.
+- Generate plain-English financial summaries.
 - Answer finance questions through a local query-style chatbot interface.
 - Show top suggested finance questions with expandable answers.
 - Export categorized transactions to CSV.
 - Optionally save transactions to SQLite.
 - Optionally use OpenAI for richer AI-generated summaries.
 
-The application is designed to work even without an OpenAI API key. If OpenAI is not configured, it falls back to deterministic local summaries. Generated summaries are cleaned before display so retrieval evidence, source chunks, page debug text, and internal logs do not appear in the UI.
+The application is designed to work even without an OpenAI API key. If OpenAI is not configured, it falls back to deterministic local summaries.
 
 ## 2. Technology Stack
 
@@ -103,7 +103,6 @@ Responsibilities:
 - Provides search and filter controls.
 - Displays dashboard tabs.
 - Displays AI insights and chatbot.
-- Renders summary and chatbot answers as Markdown for readability.
 - Exports transactions as CSV.
 - Saves transactions to SQLite.
 
@@ -371,8 +370,6 @@ OpenAI behavior:
 
 - Uses OpenAI only when `OPENAI_API_KEY` exists and the sidebar toggle is enabled.
 - If OpenAI fails for any reason, the app silently falls back to the local summary.
-- Prompts OpenAI to return only clean user-facing Markdown.
-- Strips retrieval/debug artifacts such as `Relevant evidence`, `Sources`, page references, and chunk IDs before showing generated text.
 
 ### `finance/utils.py`
 

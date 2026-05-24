@@ -1,6 +1,6 @@
 import pandas as pd
 
-from finance.chatbot import _clean_generated_text, answer_question, generate_local_summary
+from finance.chatbot import answer_question
 
 
 def sample_df():
@@ -93,27 +93,3 @@ def test_compare_category_spending_across_months():
     assert "Food spending increased by" in answer
     assert "2026-01" in answer
     assert "2026-02" in answer
-
-
-def test_local_summary_is_structured_markdown():
-    summary = generate_local_summary(sample_df())
-
-    assert "### Financial Summary" in summary
-    assert "### Biggest Spending Areas" in summary
-    assert "### Forecast" in summary
-
-
-def test_generated_text_cleanup_removes_retrieval_debug():
-    raw = """Working capital keeps the business running.
-
-Relevant evidence found:
-[Page 13] Working capital can be defined...
-Sources: Decoding-Financial-Jargons.pdf - chunk 26
-"""
-
-    cleaned = _clean_generated_text(raw)
-
-    assert cleaned == "Working capital keeps the business running."
-    assert "Relevant evidence" not in cleaned
-    assert "Sources:" not in cleaned
-    assert "chunk" not in cleaned

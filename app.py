@@ -261,7 +261,7 @@ def show_dashboard(df: pd.DataFrame) -> None:
 def show_ai_tab(df: pd.DataFrame, use_openai: bool) -> None:
     st.subheader("AI Insights")
     insights = generate_financial_insights(df, use_openai=use_openai)
-    st.markdown(insights.summary)
+    st.write(insights.summary)
     for recommendation in insights.recommendations:
         st.write(f"- {recommendation}")
 
@@ -269,11 +269,11 @@ def show_ai_tab(df: pd.DataFrame, use_openai: bool) -> None:
     st.caption("Top questions")
     for top_question in TOP_QUESTIONS:
         with st.expander(top_question):
-            st.markdown(answer_question(df, top_question))
+            st.write(answer_question(df, top_question))
 
     question = st.text_input("Ask a question", placeholder="Where did I spend the most?")
     if question:
-        st.markdown(answer_question(df, question))
+        st.write(answer_question(df, question))
 
 
 if __name__ == "__main__":

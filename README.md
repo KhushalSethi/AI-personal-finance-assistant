@@ -47,9 +47,8 @@ For the full detailed project documentation, see [DOCUMENTATION.md](DOCUMENTATIO
 - Financial health score.
 - Search, filter, and CSV export.
 - Optional SQLite persistence.
-- Optional OpenAI-generated summaries with deterministic local fallback and cleanup to remove retrieval/debug text.
+- Optional OpenAI-generated summaries with deterministic local fallback.
 - Local finance chatbot for category ranking, row retrieval, merchant totals, savings advice, recurring payments, forecasts, and top-question shortcuts.
-- Structured Markdown summaries for readable financial insights.
 - Light/dark mode toggle.
 
 ## Setup

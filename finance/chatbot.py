@@ -58,25 +58,16 @@ def generate_local_summary(df: pd.DataFrame) -> str:
     categories = category_breakdown(df)
     forecast = forecast_next_month_expenses(df)
     score, details = financial_health_score(df)
-    top_lines = []
-    for _, row in categories.head(3).iterrows():
-        top_lines.append(f"- {row['category']}: {currency(float(row['total']))}")
-    if not top_lines:
-        top_lines.append("- No expense categories found yet.")
+    top_category = categories.iloc[0]["category"] if not categories.empty else "no category"
+    top_amount = float(categories.iloc[0]["total"]) if not categories.empty else 0.0
 
     return (
-        "### Financial Summary\n"
-        f"- Transactions analyzed: {int(kpis['transactions'])}\n"
-        f"- Income: {currency(kpis['income'])}\n"
-        f"- Expenses: {currency(kpis['expenses'])}\n"
-        f"- Savings: {currency(kpis['savings'])} ({kpis['savings_rate']:.1f}%)\n"
-        f"- Health score: {score}/100\n\n"
-        "### Biggest Spending Areas\n"
-        + "\n".join(top_lines)
-        + "\n\n"
-        "### Forecast\n"
-        f"- Next month estimate: {currency(float(forecast['forecast']))} for {forecast['next_month']}\n"
-        f"- Average savings rate used in health scoring: {details['avg_savings_rate']:.1f}%"
+        f"You recorded {int(kpis['transactions'])} transactions with total income of {currency(kpis['income'])} "
+        f"and expenses of {currency(kpis['expenses'])}. Your estimated savings rate is "
+        f"{kpis['savings_rate']:.1f}%. The largest spending category is {top_category} at "
+        f"{currency(top_amount)}. The next month expense forecast is {currency(float(forecast['forecast']))}. "
+        f"Your financial health score is {score}/100, with an average savings rate of "
+        f"{details['avg_savings_rate']:.1f}%."
     )
 
 
@@ -548,14 +539,8 @@ def _try_openai_summary(df: pd.DataFrame, local_summary: str, recommendations: l
         categories = category_breakdown(df).head(8).to_dict(orient="records")
         monthly = monthly_summary(df).tail(6).to_dict(orient="records")
         prompt = (
-            "Write a concise personal finance summary in plain English using this structure:\n"
-            "### Financial Summary\n"
-            "- 3 to 5 bullets with the most important metrics.\n"
-            "### What To Watch\n"
-            "- 2 to 3 bullets about spending risks or patterns.\n"
-            "### Next Steps\n"
-            "- 2 practical actions.\n"
-            "Do not mention evidence, sources, chunks, pages, or retrieval.\n"
+            "Write a concise personal finance summary in plain English. "
+            "Include spending patterns, budget recommendations, and savings suggestions.\n"
             f"Baseline summary: {local_summary}\n"
             f"Recommendations: {recommendations}\n"
             f"Category data: {categories}\n"
@@ -564,46 +549,12 @@ def _try_openai_summary(df: pd.DataFrame, local_summary: str, recommendations: l
         response = client.chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a practical personal finance assistant. Return only the final user-facing "
-                        "answer in clean Markdown. Do not include retrieval evidence, source chunks, page "
-                        "numbers, debug logs, raw JSON, or internal reasoning."
-                    ),
-                },
+                {"role": "system", "content": "You are a practical personal finance assistant."},
                 {"role": "user", "content": prompt},
             ],
             temperature=0.3,
             max_tokens=350,
         )
-        return _clean_generated_text(response.choices[0].message.content or "")
+        return response.choices[0].message.content
     except Exception:
         return None
-
-
-def _clean_generated_text(text: str) -> str:
-    lines = str(text).splitlines()
-    cleaned: list[str] = []
-    skip_debug_block = False
-
-    for line in lines:
-        stripped = line.strip()
-        lowered = stripped.lower()
-        if not stripped:
-            skip_debug_block = False
-            if cleaned and cleaned[-1] != "":
-                cleaned.append("")
-            continue
-        if lowered.startswith(("relevant evidence", "sources:", "source:")):
-            skip_debug_block = True
-            continue
-        if skip_debug_block:
-            continue
-        if re.search(r"\bchunk\s+\d+\b", lowered):
-            continue
-        if re.match(r"^\[?page\s+\d+\]?", lowered):
-            continue
-        cleaned.append(line)
-
-    return "\n".join(cleaned).strip()
